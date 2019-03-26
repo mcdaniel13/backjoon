@@ -19,7 +19,8 @@ int sharkX;
 int sharkY;
 int sharkSize;
 
-int numOfFish;
+int totalFish;
+
 int totalDistance;
 
 pair<int, pair<int,int>> bfs() {
@@ -27,32 +28,29 @@ pair<int, pair<int,int>> bfs() {
     vector<pair<int, pair<int,int>>> eatenFish;
 
     for(int i = 0; i < n; i++) {
-        for(int j = 0; j < n; j++) {
+        for (int j = 0; j < n; j++) {
             visited[i][j] = false;
         }
     }
 
-    visited[sharkX][sharkY] = true;
-
     q.push(make_pair(0, make_pair(sharkX, sharkY)));
 
     while(!q.empty()) {
-        int curX = q.front().second.first;
-        int curY = q.front().second.second;
-        int curDist = q.front().first;
+        int prevX = q.front().second.first;
+        int prevY = q.front().second.second;
+        int prevDist = q.front().first;
 
         q.pop();
 
-        for(int i = 0; i< 4; i++) {
-            int newX = curX + moving[i][0];
-            int newY = curY + moving[i][1];
-            if(newX >= 0 && newX < n && newY >=0 && newY < n) {
+        for(int i = 0; i < 4; i++) {
+            int newX = prevX + moving[i][0];
+            int newY = prevY + moving[i][1];
+            if(newX >=0 && newX < n && newY >= 0 && newY < n) {
                 if(!visited[newX][newY] && arr[newX][newY] <= sharkSize) {
-                    int newDist = curDist + 1;
-                    if (arr[newX][newY] < sharkSize && arr[newX][newY] != 0) {
-                        eatenFish.push_back(make_pair(newDist, make_pair(newX, newY)));
-                    }
+                    int newDist = prevDist + 1;
                     visited[newX][newY] = true;
+                    if (arr[newX][newY] < sharkSize && arr[newX][newY] != 0)
+                        eatenFish.push_back(make_pair(newDist, make_pair(newX, newY)));
                     q.push(make_pair(newDist, make_pair(newX, newY)));
                 }
             }
@@ -70,21 +68,23 @@ pair<int, pair<int,int>> bfs() {
 
 void solve() {
     sharkSize = 2;
+    arr[sharkX][sharkY] = 0;
+    totalDistance = 0;
 
     int eatCount = 0;
     int totalEatCount = 0;
 
-    while(totalEatCount < numOfFish) {
-        pair<int, pair<int,int>> next = bfs();
-        if (next.first == -1)
+    while(totalEatCount < totalFish) {
+        pair<int, pair<int, int>> next = bfs();
+        if(next.first < 0)
             break;
         else {
-            eatCount++;
-            totalEatCount++;
             sharkX = next.second.first;
             sharkY = next.second.second;
-            arr[sharkX][sharkY] = 0;
             totalDistance += next.first;
+            arr[sharkX][sharkY] = 0;
+            eatCount++;
+            totalEatCount++;
         }
 
         if(eatCount == sharkSize) {
@@ -96,21 +96,18 @@ void solve() {
 
 int main() {
     cin >> n;
-    numOfFish = 0;
+    totalFish = 0;
     for(int i = 0; i < n; i++) {
         for(int j = 0; j < n; j++) {
             cin >> arr[i][j];
             if(arr[i][j] == 9) {
                 sharkX = i;
                 sharkY = j;
-                arr[i][j] = 0;
-            } else if (arr[i][j] != 0) {
-                numOfFish++;
-            }
+            } else if (arr[i][j] != 0)
+                totalFish++;
         }
     }
 
-    totalDistance = 0;
     solve();
 
     cout << totalDistance << endl;
