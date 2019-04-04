@@ -1,3 +1,5 @@
+/* https://www.acmicpc.net/problem/15684 */
+
 #include <iostream>
 #include <algorithm>
 
@@ -7,8 +9,9 @@ const int NMAX = 11;
 const int HMAX = 31;
 
 int map[HMAX][NMAX];
-
+int cross[NMAX * HMAX][2];
 int n, m, h;
+int crossCount;
 
 int result;
 
@@ -26,7 +29,7 @@ int solve() {
 	for (int i = 1; i <= n; i++) {
 		int curLine = i;
 		int height = 1;
-		while (height < h)
+		while (height <= h)
 			if (map[height][curLine] == 1) {	// move down
 				height++;
 			}
@@ -38,51 +41,111 @@ int solve() {
 				curLine--;
 				height++;
 			}
-		cout << "start = " << i << " end = " << curLine << endl;;
+		//		cout << "start = " << i << " end = " << curLine << endl;;
 		if (curLine == i) {
 			matchCount++;
 		}
 	}
 
-	cout << "matchCount = " << matchCount << endl;
+	//	cout << "matchCount = " << matchCount << endl;
 	return matchCount;
 	//	if (matchCount == n) {
 	//
 	//	}
 }
 
-void selectCross(int cur, int curLine, int curHeight) {
-	if (cur == 3 || cur > result) {
+void selectCross() {
+	if (solve() == n) {
+		result = 0;
 		return;
 	}
-
-	int matchCount = solve();	// no additional crossline;
-	if (matchCount == n) {
-		result = 0;
+	//single
+	for (int i = 0; i < crossCount; i++) {
+		int curHeight = cross[i][0];
+		int curLine = cross[i][1];
+		map[curHeight][curLine] = 2;
+		map[curHeight][curLine + 1] = 3;
+		//		print();
+		if (solve() == n) {
+			result = 1;
+			return;
+		}
+		map[curHeight][curLine] = 1;
+		map[curHeight][curLine + 1] = 1;
 	}
-	else {
-		for (int i = curLine; i <= n; i++) {
-			for (int j = curHeight; j <= h; j++) {
-				if (map[j][i] == 1 && map[j][i] == 1) {	// check available spot to put crossline
-					map[j][i] = 2;
-					map[j][i + 1] = 3;
-					cout << "====crossLine added @" << i << "<->" << i + 1 << " at height = " << j << " ====" << endl;
-					matchCount = solve();
-					if (matchCount == n) {
-						result = min(result, matchCount);
-					}
-					else {
-						selectCross(cur + 1, curLine, cu);
-					}
-					cout << "====crossLine deleted @" << i << "<->" << i + 1 << " ====" << endl;
-					map[j][i] = 1;
-					map[j][i + 1] = 1;
+
+	for (int i = 0; i < crossCount; i++) {
+		int curHeight = cross[i][0];
+		int curLine = cross[i][1];
+		map[curHeight][curLine] = 2;
+		map[curHeight][curLine + 1] = 3;
+		for (int j = i + 1; j < crossCount; j++) {
+			int nextHeight = cross[j][0];
+			int nextLine = cross[j][1];
+			if (map[nextHeight][nextLine] == 1 && map[nextHeight][nextLine + 1] == 1) {
+				map[nextHeight][nextLine] = 2;
+				map[nextHeight][nextLine + 1] = 3;
+				//				print();
+				if (solve() == n) {
+					result = 2;
+					return;
 				}
+				map[nextHeight][nextLine] = 1;
+				map[nextHeight][nextLine + 1] = 1;
+			}
+		}
+		map[curHeight][curLine] = 1;
+		map[curHeight][curLine + 1] = 1;
+	}
+
+	for (int i = 0; i < crossCount; i++) {
+		int curHeight = cross[i][0];
+		int curLine = cross[i][1];
+		map[curHeight][curLine] = 2;
+		map[curHeight][curLine + 1] = 3;
+		for (int j = i + 1; j < crossCount; j++) {
+			int nextHeight = cross[j][0];
+			int nextLine = cross[j][1];
+			if (map[nextHeight][nextLine] == 1 && map[nextHeight][nextLine + 1] == 1) {
+				map[nextHeight][nextLine] = 2;
+				map[nextHeight][nextLine + 1] = 3;
+				for (int k = j + 1; k < crossCount; k++) {
+					int thirdHeight = cross[k][0];
+					int thirdLine = cross[k][1];
+					if (map[thirdHeight][thirdLine] == 1 && map[thirdHeight][thirdLine + 1] == 1) {
+						map[thirdHeight][thirdLine] = 2;
+						map[thirdHeight][thirdLine + 1] = 3;
+						//						print();
+						if (solve() == n) {
+							result = 3;
+							return;
+						}
+						map[thirdHeight][thirdLine] = 1;
+						map[thirdHeight][thirdLine + 1] = 1;
+					}
+				}
+				map[nextHeight][nextLine] = 1;
+				map[nextHeight][nextLine + 1] = 1;
+			}
+		}
+		map[curHeight][curLine] = 1;
+		map[curHeight][curLine + 1] = 1;
+	}
+
+}
+
+void findCrosslineSpot() {
+	crossCount = 0;
+	for (int i = 1; i <= h; i++) {	//height
+		for (int j = 1; j < n; j++) {	//line
+			if (map[i][j] == 1 && map[i][j + 1] == 1) {
+				cross[crossCount][0] = i;
+				cross[crossCount][1] = j;
+				crossCount++;
 			}
 		}
 	}
 }
-
 
 int main() {
 	cin >> n >> m >> h;
@@ -101,15 +164,12 @@ int main() {
 		map[height][line + 1] = 3;	//go right;
 	}
 
-	print();
+	//	print();
 
-	result = 4;
+	findCrosslineSpot();
 
-	selectCross(0);
-
-	if (result == 4) {
-		result = -1;
-	}
+	result = -1;
+	selectCross();
 
 	cout << result << endl;
 	cout << endl;
