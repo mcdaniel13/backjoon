@@ -15,18 +15,18 @@ struct Dragon {
 };
 
 int map[NMAX][NMAX];
-bool visit[NMAX][NMAX][20];
 Dragon dragon[20];
 
-void print() {
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 10; j++) {
-			cout << map[i][j] << " ";
+int squareCount;
+
+void findSquare() {
+	for(int i = 0; i < NMAX - 1; i++) {
+		for(int j = 0; j < NMAX - 1; j++) {
+			if(map[i][j] != 0 && map[i + 1][j] != 0 && map[i + 1][j + 1] != 0 && map[i][j + 1] != 0)
+				squareCount++;
 		}
-		cout << endl;
 	}
 }
-
 
 void placeDragon(int cur, int curGen, vector<int> &dir, int x, int y, int gen) {
 	if (curGen == gen)
@@ -39,56 +39,46 @@ void placeDragon(int cur, int curGen, vector<int> &dir, int x, int y, int gen) {
 		int curDir = (dir[i] + 1) % 4;
 		curX += moving[curDir][0];
 		curY += moving[curDir][1];
-		if (!visit[curY][curX][cur]) {
-			map[curY][curX] += 1;
-		}
+		map[curY][curX] += 1;
 		dir.push_back(curDir);
 	}
-	cout << "cur = " << curGen + 1 << endl;
-	print();
 	placeDragon(cur, curGen + 1, dir, curX, curY, gen);
 }
 
 void solve() {
 	for (int i = 0; i < n; i++) {
+		vector<int> dir;    // save dragon direction at gen;
+
 		//init for gen = 0;
-		vector<int> dir;
 		int nextX = dragon[i].x + moving[dragon[i].start][0];
 		int nextY = dragon[i].y + moving[dragon[i].start][1];
 		map[dragon[i].y][dragon[i].x] += 1;
 		map[nextY][nextX] += 1;
-		cout << "init" << endl;
-		print();
-		visit[dragon[i].y][dragon[i].x][i] = true;
 		dir.push_back(dragon[i].start);
+
 		//find dragon at given gen
-		if (dragon[i].gen > 0) {
+		if (dragon[i].gen > 0)
 			placeDragon(i, 0, dir, nextX, nextY, dragon[i].gen);
-		}
-		cout << "after" << endl;
-		print();
 	}
 
+	// find square
+	squareCount = 0;
+	findSquare();
 }
 
 int main() {
 	cin >> n;
 
 	//init
-	for (int i = 0; i < NMAX; i++) {
-		for (int j = 0; j < NMAX; j++) {
-			for (int k = 0; k < n; k++) {
-				visit[i][j][k] = 0;
-			}
+	for (int i = 0; i < NMAX; i++)
+		for (int j = 0; j < NMAX; j++)
 			map[i][j] = 0;
-		}
-	}
 
-	for (int i = 0; i < n; i++) {
+	//input
+	for (int i = 0; i < n; i++)
 		cin >> dragon[i].x >> dragon[i].y >> dragon[i].start >> dragon[i].gen;
-	}
 
 	solve();
 
-	cout << endl;
+	cout << squareCount << endl;
 }
